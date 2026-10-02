@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Home | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Hero Banner -->
+  <div class="p-5 mb-5 hero-banner shadow-lg">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">
+          <i class="bi bi-shield-check me-1"></i> Certified Rescue & Adoption
+        </span>
+        <h1 class="display-4 fw-extrabold mb-3 text-white">
+          Give a Loving Home to a Rescued Pet
+        </h1>
+        <p class="lead mb-4 text-white-50">
+          Welcome to <strong>{{ SITE_NAME }}</strong>. We rescue, heal, and find compassionate lifelong families for abandoned dogs, cats, birds, and rabbits across Bangladesh.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{% url 'pet_list' %}" class="btn btn-light text-primary btn-lg rounded-pill fw-bold px-4 shadow-sm">
+            <i class="bi bi-search-heart me-1"></i> Browse Available Pets
+          </a>
+          <a href="#how-it-works" class="btn btn-outline-light btn-lg rounded-pill fw-semibold px-4">
+            <i class="bi bi-info-circle me-1"></i> How Adoption Works
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-5 text-center mt-4 mt-lg-0">
+        <div class="p-4 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-25 backdrop-blur">
+          <h5 class="text-white fw-bold mb-3">
+            <i class="bi bi-bar-chart-line-fill text-warning me-2"></i> Our Impact in Bangladesh
+          </h5>
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="p-3 bg-white bg-opacity-10 rounded-3">
+                <h3 class="fw-bold text-warning mb-0">{{ total_available }}</h3>
+                <small class="text-white-50">Awaiting Homes</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 bg-white bg-opacity-10 rounded-3">
+                <h3 class="fw-bold text-success mb-0">{{ total_adopted }}</h3>
+                <small class="text-white-50">Adopted Pets</small>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="p-3 bg-white bg-opacity-10 rounded-3">
+                <h4 class="fw-bold text-white mb-0">{{ total_rescues }} Total Rescues</h4>
+                <small class="text-white-50">Rescued & Rehabilitated Animals</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Species / Category Filter Bar -->
+  <div class="mb-5 text-center">
+    <h3 class="fw-bold mb-2">Explore by Pet Category</h3>
+    <p class="text-muted mb-4">Choose your favorite animal companion category</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+      <a href="{% url 'pet_list' %}" class="category-pill active">
+        <i class="bi bi-grid-3x3-gap-fill"></i> All Species
+      </a>
+      <a href="{% url 'pet_list' %}?animal_type=Dog" class="category-pill">
+        <span>🐕</span> Dogs
+      </a>
+      <a href="{% url 'pet_list' %}?animal_type=Cat" class="category-pill">
+        <span>🐈</span> Cats
+      </a>
+      <a href="{% url 'pet_list' %}?animal_type=Bird" class="category-pill">
+        <span>🦜</span> Birds
+      </a>
+      <a href="{% url 'pet_list' %}?animal_type=Rabbit" class="category-pill">
+        <span>🐇</span> Rabbits
+      </a>
+      <a href="{% url 'pet_list' %}?animal_type=Other" class="category-pill">
+        <span>✨</span> Other Pets
+      </a>
+    </div>
+  </div>
+
+  <!-- Featured Available Pets -->
+  <div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="fw-bold mb-1">Meet Our Available Pets</h3>
+        <p class="text-muted mb-0">These friendly pets are currently looking for a caring home</p>
+      </div>
+      <a href="{% url 'pet_list' %}?status=Available" class="btn btn-outline-primary rounded-pill fw-semibold px-4">
+        View All ({{ total_available }}) <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% for pet in featured_pets %}
+        <div class="col-md-6 col-lg-4">
+          <div class="pet-card">
+            <div class="pet-card-img-wrapper">
+              <span class="pet-card-badge {% if pet.status == 'Available' %}badge-available{% else %}badge-adopted{% endif %}">
+                {% if pet.status == 'Available' %}● Available{% else %}✓ Adopted{% endif %}
+              </span>
+
+              {% if user.is_authenticated %}
+                <form action="{% url 'toggle_favorite' pet.id %}" method="post" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="pet-fav-btn" title="Add to favorites">
+                    <i class="bi {% if pet.id in user_favorite_pet_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+                  </button>
+                </form>
+              {% endif %}
+
+              {% if pet.image %}
+                <img src="{{ pet.image.url }}" alt="{{ pet.name }}" class="pet-card-img">
+              {% else %}
+                <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                  <i class="bi bi-image fs-1"></i>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="p-4 d-flex flex-column flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h4 class="fw-bold mb-0 text-dark">{{ pet.name }}</h4>
+                <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1 rounded-pill">
+                  {{ pet.animal_type }}
+                </span>
+              </div>
+              <p class="text-muted small mb-2"><i class="bi bi-patch-check text-primary me-1"></i> {{ pet.breed }}</p>
+              
+              <div class="row g-2 mb-3 small text-secondary">
+                <div class="col-6">
+                  <i class="bi bi-calendar3 me-1"></i> Age: <strong>{{ pet.age }}</strong>
+                </div>
+                <div class="col-6">
+                  <i class="bi bi-gender-ambiguous me-1"></i> <strong>{{ pet.gender }}</strong>
+                </div>
+                <div class="col-12">
+                  <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ pet.location }}
+                </div>
+              </div>
+
+              <p class="text-secondary small mb-3 flex-grow-1 text-truncate-2">
+                {{ pet.description|truncatewords:16 }}
+              </p>
+
+              <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                <div>
+                  <small class="text-muted d-block">Adoption Fee:</small>
+                  <strong class="currency-tag">
+                    {% if pet.adoption_fee > 0 %}
+                      ৳ {{ pet.adoption_fee|floatformat:0 }} {{ CURRENCY }}
+                    {% else %}
+                      Free / ৳0 {{ CURRENCY }}
+                    {% endif %}
+                  </strong>
+                </div>
+                <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-sm btn-primary rounded-pill px-3 py-2 fw-semibold">
+                  View Profile <i class="bi bi-arrow-right"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <div class="alert alert-light text-center py-5 rounded-4 border">
+            <i class="bi bi-emoji-neutral fs-1 text-muted d-block mb-3"></i>
+            <h5 class="fw-bold">No pets currently listed.</h5>
+            <p class="text-muted">Check back soon or explore our admin management section.</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- How It Works Section -->
+  <div id="how-it-works" class="py-5 my-4 bg-white rounded-4 border p-4 p-lg-5 shadow-sm">
+    <div class="text-center mb-5">
+      <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold mb-2">Step-by-Step Guide</span>
+      <h2 class="fw-bold">How Pet Adoption Works</h2>
+      <p class="text-muted">Three simple, transparent steps to welcome your new family member</p>
+    </div>
+
+    <div class="row g-4 text-center">
+      <div class="col-md-4">
+        <div class="p-4 rounded-4 bg-light h-100">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-search fs-4"></i>
+          </div>
+          <h4 class="fw-bold mb-2">1. Browse & Match</h4>
+          <p class="text-muted small">
+            Explore pet profiles with photos, personality traits, health checks, and locations in Dhaka and beyond.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 rounded-4 bg-light h-100">
+          <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-file-earmark-text-fill fs-4"></i>
+          </div>
+          <h4 class="fw-bold mb-2">2. Submit Request</h4>
+          <p class="text-muted small">
+            Fill out a simple adoption form detailing your home environment, contact information, and pet experience.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 rounded-4 bg-light h-100">
+          <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-house-heart-fill fs-4"></i>
+          </div>
+          <h4 class="fw-bold mb-2">3. Welcome Home</h4>
+          <p class="text-muted small">
+            Once approved by the ASTA shelter team, finalize the adoption agreement and take your new companion home!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

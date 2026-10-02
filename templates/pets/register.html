@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Register | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 56px; height: 56px;">
+            <i class="bi bi-person-plus-fill fs-3 text-primary"></i>
+          </div>
+          <h3 class="fw-bold mb-1">Create Account</h3>
+          <p class="text-muted small">Join {{ SITE_NAME }} to adopt and care for rescued animals</p>
+        </div>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger rounded-3 small">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">First Name</label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}
+                <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Last Name</label>
+              {{ form.last_name }}
+              {% if form.last_name.errors %}
+                <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Username <span class="text-danger">*</span></label>
+            {{ form.username }}
+            {% if form.username.errors %}
+              <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Email Address <span class="text-danger">*</span></label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Password <span class="text-danger">*</span></label>
+            {{ form.password }}
+            {% if form.password.errors %}
+              <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+            {% endif %}
+            <div class="form-text small">At least 6 characters.</div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-semibold text-secondary">Confirm Password <span class="text-danger">*</span></label>
+            {{ form.confirm_password }}
+            {% if form.confirm_password.errors %}
+              <div class="text-danger small mt-1">{{ form.confirm_password.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="d-grid mb-3">
+            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
+              Complete Registration
+            </button>
+          </div>
+
+          <div class="text-center text-muted small">
+            Already have an account? 
+            <a href="{% url 'login' %}" class="fw-bold text-primary text-decoration-none">
+              Sign in
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

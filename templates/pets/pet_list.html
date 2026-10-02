@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Pets | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">Browse Available Pets</h2>
+      <p class="text-muted mb-0">Showing {{ total_results }} pet{{ total_results|pluralize }} looking for a loving home</p>
+    </div>
+    <div class="mt-3 mt-md-0">
+      <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+        <i class="bi bi-cash-coin text-success me-1"></i> Currency: <strong>BDT (৳)</strong>
+      </span>
+    </div>
+  </div>
+
+  <!-- Search & Filter Card -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4 p-4 bg-white">
+    <form method="get" action="{% url 'pet_list' %}" class="row g-3 align-items-end">
+      <!-- Search Keyword -->
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label small fw-semibold text-secondary">
+          <i class="bi bi-search me-1"></i> Search (Name, Breed, Keyword)
+        </label>
+        <input type="text" name="search" class="form-control" placeholder="e.g. Max, Golden Retriever..." value="{{ search_query }}">
+      </div>
+
+      <!-- Animal Type / Species -->
+      <div class="col-lg-2 col-md-6">
+        <label class="form-label small fw-semibold text-secondary">
+          <i class="bi bi-tag-fill me-1"></i> Animal Type
+        </label>
+        <select name="animal_type" class="form-select">
+          <option value="">All Species</option>
+          <option value="Dog" {% if selected_animal_type == 'Dog' %}selected{% endif %}>Dog</option>
+          <option value="Cat" {% if selected_animal_type == 'Cat' %}selected{% endif %}>Cat</option>
+          <option value="Bird" {% if selected_animal_type == 'Bird' %}selected{% endif %}>Bird</option>
+          <option value="Rabbit" {% if selected_animal_type == 'Rabbit' %}selected{% endif %}>Rabbit</option>
+          <option value="Other" {% if selected_animal_type == 'Other' %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+
+      <!-- Gender -->
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label small fw-semibold text-secondary">
+          <i class="bi bi-gender-ambiguous me-1"></i> Gender
+        </label>
+        <select name="gender" class="form-select">
+          <option value="">All Genders</option>
+          <option value="Male" {% if selected_gender == 'Male' %}selected{% endif %}>Male</option>
+          <option value="Female" {% if selected_gender == 'Female' %}selected{% endif %}>Female</option>
+        </select>
+      </div>
+
+      <!-- Location -->
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label small fw-semibold text-secondary">
+          <i class="bi bi-geo-alt-fill me-1"></i> Location
+        </label>
+        <input type="text" name="location" class="form-control" placeholder="e.g. Dhaka, Sylhet..." value="{{ selected_location }}">
+      </div>
+
+      <!-- Adoption Status -->
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label small fw-semibold text-secondary">
+          <i class="bi bi-shield-check me-1"></i> Adoption Status
+        </label>
+        <select name="status" class="form-select">
+          <option value="">All Statuses</option>
+          <option value="Available" {% if selected_status == 'Available' %}selected{% endif %}>Available</option>
+          <option value="Adopted" {% if selected_status == 'Adopted' %}selected{% endif %}>Adopted</option>
+        </select>
+      </div>
+
+      <!-- Actions -->
+      <div class="col-lg-1 col-md-12 d-flex gap-2">
+        <button type="submit" class="btn btn-primary w-100 rounded-3" title="Apply Filter">
+          <i class="bi bi-funnel-fill"></i>
+        </button>
+        {% if search_query or selected_animal_type or selected_gender or selected_location or selected_status %}
+          <a href="{% url 'pet_list' %}" class="btn btn-outline-secondary rounded-3" title="Reset Filters">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Pet Grid -->
+  <div class="row g-4 mb-5">
+    {% for pet in pets %}
+      <div class="col-md-6 col-lg-4">
+        <div class="pet-card">
+          <div class="pet-card-img-wrapper">
+            <span class="pet-card-badge {% if pet.status == 'Available' %}badge-available{% else %}badge-adopted{% endif %}">
+              {% if pet.status == 'Available' %}● Available{% else %}✓ Adopted{% endif %}
+            </span>
+
+            {% if user.is_authenticated %}
+              <form action="{% url 'toggle_favorite' pet.id %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="pet-fav-btn" title="Save to favorites">
+                  <i class="bi {% if pet.id in user_favorite_pet_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+                </button>
+              </form>
+            {% endif %}
+
+            {% if pet.image %}
+              <img src="{{ pet.image.url }}" alt="{{ pet.name }}" class="pet-card-img">
+            {% else %}
+              <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                <i class="bi bi-image fs-1"></i>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="p-4 d-flex flex-column flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h4 class="fw-bold mb-0 text-dark">{{ pet.name }}</h4>
+              <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1 rounded-pill">
+                {{ pet.animal_type }}
+              </span>
+            </div>
+            
+            <p class="text-muted small mb-2">
+              <i class="bi bi-patch-check text-primary me-1"></i> {{ pet.breed }}
+            </p>
+
+            <div class="row g-2 mb-3 small text-secondary">
+              <div class="col-6">
+                <i class="bi bi-calendar3 me-1"></i> Age: <strong>{{ pet.age }}</strong>
+              </div>
+              <div class="col-6">
+                <i class="bi bi-gender-ambiguous me-1"></i> <strong>{{ pet.gender }}</strong>
+              </div>
+              <div class="col-12">
+                <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ pet.location }}
+              </div>
+            </div>
+
+            <p class="text-secondary small mb-3 flex-grow-1 text-truncate-2">
+              {{ pet.description|truncatewords:18 }}
+            </p>
+
+            <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+              <div>
+                <small class="text-muted d-block">Adoption Fee:</small>
+                <strong class="currency-tag">
+                  {% if pet.adoption_fee > 0 %}
+                    ৳ {{ pet.adoption_fee|floatformat:0 }} {{ CURRENCY }}
+                  {% else %}
+                    Free / ৳0 {{ CURRENCY }}
+                  {% endif %}
+                </strong>
+              </div>
+              <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-sm btn-primary rounded-pill px-3 py-2 fw-semibold">
+                View Details <i class="bi bi-arrow-right ms-1"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+          <i class="bi bi-search fs-1 text-muted mb-3"></i>
+          <h4 class="fw-bold">No pets match your criteria</h4>
+          <p class="text-muted">Try clearing some filter fields or search with another term.</p>
+          <div>
+            <a href="{% url 'pet_list' %}" class="btn btn-primary rounded-pill px-4">
+              Clear All Filters
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Bonus: Pagination (1 2 3 Next) -->
+  {% if pets.has_other_pages %}
+    <nav aria-label="Pet pagination" class="d-flex justify-content-center">
+      <ul class="pagination pagination-rounded shadow-sm">
+        {% if pets.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pets.previous_page_number }}&search={{ search_query }}&animal_type={{ selected_animal_type }}&gender={{ selected_gender }}&location={{ selected_location }}&status={{ selected_status }}">
+              <i class="bi bi-chevron-left me-1"></i> Prev
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link"><i class="bi bi-chevron-left me-1"></i> Prev</span>
+          </li>
+        {% endif %}
+
+        {% for num in pets.paginator.page_range %}
+          {% if pets.number == num %}
+            <li class="page-item active" aria-current="page">
+              <span class="page-link">{{ num }}</span>
+            </li>
+          {% elif num > pets.number|add:'-3' and num < pets.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}&search={{ search_query }}&animal_type={{ selected_animal_type }}&gender={{ selected_gender }}&location={{ selected_location }}&status={{ selected_status }}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if pets.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pets.next_page_number }}&search={{ search_query }}&animal_type={{ selected_animal_type }}&gender={{ selected_gender }}&location={{ selected_location }}&status={{ selected_status }}">
+              Next <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Next <i class="bi bi-chevron-right ms-1"></i></span>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

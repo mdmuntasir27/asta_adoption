@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ pet.name }} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'pet_list' %}">Pets</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'pet_list' %}?animal_type={{ pet.animal_type }}">{{ pet.animal_type }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ pet.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Pet Image & Gallery -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative bg-white">
+        <span class="pet-card-badge fs-6 {% if pet.status == 'Available' %}badge-available{% else %}badge-adopted{% endif %}">
+          {% if pet.status == 'Available' %}● Available for Adoption{% else %}✓ Adopted{% endif %}
+        </span>
+
+        {% if user.is_authenticated %}
+          <form action="{% url 'toggle_favorite' pet.id %}" method="post" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="pet-fav-btn p-2" style="width: 44px; height: 44px;" title="Save to favorites">
+              <i class="bi {% if user_has_favorited %}bi-heart-fill text-danger fs-4{% else %}bi-heart fs-4{% endif %}"></i>
+            </button>
+          </form>
+        {% endif %}
+
+        {% if pet.image %}
+          <img src="{{ pet.image.url }}" alt="{{ pet.name }}" class="img-fluid w-100" style="max-height: 480px; object-fit: cover;">
+        {% else %}
+          <div class="py-5 text-center bg-light text-muted" style="min-height: 380px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <i class="bi bi-image fs-1 mb-2"></i>
+            <span>No photo uploaded</span>
+          </div>
+        {% endif %}
+
+        <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
+          <small class="text-muted"><i class="bi bi-clock me-1"></i> Listed: {{ pet.created_at|date:"d M, Y" }}</small>
+          <small class="text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Location: <strong>{{ pet.location }}</strong></small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pet Details & Adoption Action -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill fs-6">
+            {{ pet.animal_type }}
+          </span>
+          <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+            ID: #{{ pet.id }}
+          </span>
+        </div>
+
+        <h1 class="display-5 fw-extrabold text-dark mb-1">
+          {% if pet.animal_type == 'Dog' %}🐕{% elif pet.animal_type == 'Cat' %}🐈{% elif pet.animal_type == 'Bird' %}🦜{% elif pet.animal_type == 'Rabbit' %}🐇{% else %}🐾{% endif %}
+          {{ pet.name }}
+        </h1>
+        <p class="text-muted fs-5 mb-4">{{ pet.breed }}</p>
+
+        <!-- Specifications Grid -->
+        <div class="row g-3 mb-4">
+          <div class="col-4">
+            <div class="spec-item">
+              <div class="label">Age</div>
+              <div class="value">{{ pet.age }}</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="spec-item">
+              <div class="label">Gender</div>
+              <div class="value">{{ pet.gender }}</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="spec-item">
+              <div class="label">Adoption Fee</div>
+              <div class="value text-success">
+                {% if pet.adoption_fee > 0 %}
+                  ৳ {{ pet.adoption_fee|floatformat:0 }}
+                {% else %}
+                  Free
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- About The Pet Story -->
+        <div class="mb-4">
+          <h5 class="fw-bold mb-2">About {{ pet.name }}</h5>
+          <p class="text-secondary leading-relaxed" style="white-space: pre-line;">
+            {{ pet.description }}
+          </p>
+        </div>
+
+        <div class="mt-auto pt-3 border-top">
+          <!-- Critical Rule & UI Requirement: Adopted vs Available -->
+          {% if pet.status == 'Adopted' %}
+            <div class="adopted-alert-banner text-center mb-3">
+              <i class="bi bi-x-circle-fill me-2 fs-5"></i>
+              <span>❌ This pet has already been adopted.</span>
+            </div>
+            <p class="small text-muted text-center mb-0">
+              Applications for {{ pet.name }} are closed. Please browse our other loving pets looking for homes!
+            </p>
+          {% else %}
+            <!-- Available Pet Logic -->
+            {% if user.is_authenticated %}
+              {% if user_has_pending_request %}
+                <div class="alert alert-warning border-0 shadow-sm rounded-3 d-flex align-items-center mb-3">
+                  <i class="bi bi-clock-history fs-4 me-3 text-warning"></i>
+                  <div>
+                    <strong>Application Pending!</strong><br>
+                    You have already submitted an adoption request for {{ pet.name }}. You will be notified once our team reviews it.
+                  </div>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary w-100 rounded-pill py-3 fw-bold">
+                  <i class="bi bi-clipboard-check me-2"></i> View in Your Dashboard
+                </a>
+              {% else %}
+                <div class="available-alert-banner d-flex align-items-center justify-content-between mb-3">
+                  <div>
+                    <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                    <span>Status: Available for immediate adoption!</span>
+                  </div>
+                  <strong class="currency-tag">Fee: ৳ {{ pet.adoption_fee|floatformat:0 }} {{ CURRENCY }}</strong>
+                </div>
+
+                <a href="{% url 'adoption_apply' pet.pk %}" class="btn btn-primary btn-lg w-100 rounded-pill py-3 fw-bold shadow">
+                  <i class="bi bi-heart-fill me-2 text-danger"></i> Apply for Adoption
+                </a>
+              {% endif %}
+            {% else %}
+              <div class="p-3 bg-light rounded-3 text-center mb-3 border">
+                <i class="bi bi-shield-lock text-primary fs-3 d-block mb-1"></i>
+                <p class="small text-muted mb-3">Please sign in or create an account to submit an adoption application for {{ pet.name }}.</p>
+                <div class="d-flex justify-content-center gap-2">
+                  <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-primary rounded-pill px-4 fw-semibold">
+                    Login
+                  </a>
+                  <a href="{% url 'register' %}" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                    Create Account
+                  </a>
+                </div>
+              </div>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Similar Pets Section -->
+  {% if similar_pets %}
+    <div class="mt-5 pt-4">
+      <h3 class="fw-bold mb-4">Other {{ pet.animal_type }}s Looking for a Home</h3>
+      <div class="row g-4">
+        {% for sp in similar_pets %}
+          <div class="col-md-4">
+            <div class="pet-card">
+              <div class="pet-card-img-wrapper" style="height: 180px;">
+                <span class="pet-card-badge {% if sp.status == 'Available' %}badge-available{% else %}badge-adopted{% endif %}">
+                  {{ sp.status }}
+                </span>
+                {% if sp.image %}
+                  <img src="{{ sp.image.url }}" alt="{{ sp.name }}" class="pet-card-img">
+                {% else %}
+                  <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                    <i class="bi bi-image fs-1"></i>
+                  </div>
+                {% endif %}
+              </div>
+              <div class="p-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <h5 class="fw-bold mb-0">{{ sp.name }}</h5>
+                  <span class="currency-tag small">৳ {{ sp.adoption_fee|floatformat:0 }} {{ CURRENCY }}</span>
+                </div>
+                <p class="text-muted small mb-2">{{ sp.breed }} • {{ sp.location }}</p>
+                <a href="{% url 'pet_detail' sp.pk %}" class="btn btn-sm btn-outline-primary w-100 rounded-pill">
+                  View Profile
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

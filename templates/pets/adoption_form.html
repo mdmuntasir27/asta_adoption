@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply to Adopt {{ pet.name }} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'pet_list' %}">Pets</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'pet_detail' pet.pk %}">{{ pet.name }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Adoption Application</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <!-- Summary Card for Selected Pet -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden bg-white">
+        <div class="row g-0 align-items-center">
+          <div class="col-md-4">
+            {% if pet.image %}
+              <img src="{{ pet.image.url }}" alt="{{ pet.name }}" class="img-fluid h-100 w-100" style="object-fit: cover; max-height: 180px;">
+            {% else %}
+              <div class="bg-light d-flex align-items-center justify-content-center h-100 py-4 text-muted">
+                <i class="bi bi-image fs-1"></i>
+              </div>
+            {% endif %}
+          </div>
+          <div class="col-md-8">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <h4 class="card-title fw-bold mb-1">Adopting: {{ pet.name }}</h4>
+                <span class="badge bg-success-subtle text-success fw-bold px-3 py-1 rounded-pill">
+                  {{ pet.status }}
+                </span>
+              </div>
+              <p class="text-muted small mb-2">{{ pet.animal_type }} • {{ pet.breed }} • {{ pet.age }} • {{ pet.location }}</p>
+              <div class="text-secondary small">
+                Adoption / Care Fee: <strong>৳ {{ pet.adoption_fee|floatformat:0 }} {{ CURRENCY }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Application Form -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-2" style="width: 50px; height: 50px;">
+            <i class="bi bi-clipboard2-heart-fill fs-4 text-primary"></i>
+          </div>
+          <h2 class="fw-bold">Adoption Application</h2>
+          <p class="text-muted">Please provide accurate details so our rescue team can review your home readiness.</p>
+        </div>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger rounded-3">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <!-- Address -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark">
+              <i class="bi bi-geo-alt me-1 text-primary"></i> Address <span class="text-danger">*</span>
+            </label>
+            {{ form.address }}
+            {% if form.address.errors %}
+              <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
+            {% endif %}
+            <div class="form-text small">Your current living address in Bangladesh.</div>
+          </div>
+
+          <!-- Phone Number -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark">
+              <i class="bi bi-telephone me-1 text-primary"></i> Phone Number <span class="text-danger">*</span>
+            </label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+            {% endif %}
+            <div class="form-text small">Our team will call you to confirm home verification.</div>
+          </div>
+
+          <!-- Why do you want this pet? -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark">
+              <i class="bi bi-chat-heart me-1 text-primary"></i> Why do you want this pet? <span class="text-danger">*</span>
+            </label>
+            {{ form.reason }}
+            {% if form.reason.errors %}
+              <div class="text-danger small mt-1">{{ form.reason.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Have you owned a pet before? -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark">
+              <i class="bi bi-award me-1 text-primary"></i> Have you owned a pet before? <span class="text-danger">*</span>
+            </label>
+            {{ form.previous_pet_experience }}
+            {% if form.previous_pet_experience.errors %}
+              <div class="text-danger small mt-1">{{ form.previous_pet_experience.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Additional message -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold text-dark">
+              <i class="bi bi-envelope-paper me-1 text-primary"></i> Additional Message (Optional)
+            </label>
+            {{ form.message }}
+            {% if form.message.errors %}
+              <div class="text-danger small mt-1">{{ form.message.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Submission terms notice -->
+          <div class="p-3 bg-light rounded-3 small text-muted mb-4 border">
+            <i class="bi bi-info-circle text-primary me-1"></i> By submitting this application, you confirm that you will provide a safe, loving, and permanent home for {{ pet.name }}. Submitting an application does not automatically guarantee adoption until verified.
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
+              <i class="bi bi-send-fill me-2"></i> Submit Application
+            </button>
+            <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-outline-secondary rounded-pill fw-semibold">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
